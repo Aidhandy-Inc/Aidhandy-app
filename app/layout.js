@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "../context/AuthContext"; // Wrap app with Auth
+import { AuthProvider } from "../context/AuthContext"; 
+import * as Sentry from "@sentry/nextjs";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,9 +31,13 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 text-gray-900`}
       >
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <Sentry.ErrorBoundary
+          fallback={<p>Something went wrong. Our team has been notified.</p>}
+        >
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </Sentry.ErrorBoundary>
       </body>
     </html>
   );
