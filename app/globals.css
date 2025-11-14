@@ -1,5 +1,11 @@
+/* --------------------------------------------- */
+/* Tailwind (keep it exactly like this)          */
+/* --------------------------------------------- */
 @import "tailwindcss";
 
+/* --------------------------------------------- */
+/* Root Theme Variables                          */
+/* --------------------------------------------- */
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -23,4 +29,126 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* --------------------------------------------------- */
+/* =============== NAVBAR: Desktop + Mobile ===========*/
+/* --------------------------------------------------- */
+
+.top-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 50;
+}
+
+.top-nav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1d9fd8;
+  text-decoration: none;
+}
+
+.nav-desktop-links {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.nav-desktop-links a {
+  text-decoration: none;
+  color: #111827;
+}
+
+.nav-desktop-links a:hover {
+  color: #1d9fd8;
+}
+
+.nav-cta {
+  background: #1d9fd8;
+  color: #ffffff !important;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* Hamburger icon */
+.nav-mobile-btn {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: none; /* hidden on desktop */
+}
+
+/* Mobile dropdown */
+.nav-mobile-menu {
+  display: none; /* default hidden */
+}
+
+/* --------------------------------------------- */
+/* Mobile Rules (≤ 768px)                       */
+/* --------------------------------------------- */
+@media (max-width: 768px) {
+  .nav-desktop-links {
+    display: none; /* hide top-right nav */
+  }
+
+  .nav-mobile-btn {
+    display: block; /* show hamburger */
+  }
+
+  .nav-mobile-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #ffffff;
+  }
+
+  .nav-mobile-menu a {
+    text-decoration: none;
+    color: #111827;
+    font-size: 1rem;
+  }
+
+  .nav-mobile-menu a:hover {
+    color: #1d9fd8;
+  }
+}
+
+/* --------------------------------------------- */
+/* Desktop Rules (≥ 769px)                      */
+/* --------------------------------------------- */
+@media (min-width: 769px) {
+  .nav-mobile-menu {
+    display: none !important;
+  }
+}
+
+/* --------------------------------------------- */
+/* Footer                                        */
+/* --------------------------------------------- */
+.site-footer {
+  margin-top: 40px;
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #6b7280;
 }
