@@ -8,13 +8,14 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="navbar-wrapper">
+      <nav className="navbar">
         <div className="navbar-inner">
+
           <Link href="/" className="nav-logo">
             AidHandy
           </Link>
 
-          {/* Desktop */}
+          {/* Desktop Nav */}
           <div className="nav-links">
             <Link href="/">Home</Link>
             <Link href="/contact">Contact</Link>
@@ -23,17 +24,14 @@ export default function Navbar() {
             <Link href="/auth/login" className="nav-cta">Login</Link>
           </div>
 
-          {/* Mobile toggle */}
-          <button
-            className="nav-mobile-btn"
-            onClick={() => setOpen(!open)}
-          >
+          {/* Mobile Hamburger */}
+          <button className="nav-mobile-btn" onClick={() => setOpen(!open)}>
             ☰
           </button>
         </div>
       </nav>
 
-      {/* Mobile menu */}
+      {/* Mobile Dropdown */}
       <div className={`nav-mobile-menu ${open ? "active" : ""}`}>
         <Link href="/" onClick={() => setOpen(false)}>Home</Link>
         <Link href="/contact" onClick={() => setOpen(false)}>Contact</Link>
@@ -43,9 +41,6 @@ export default function Navbar() {
           Login
         </Link>
       </div>
-
-      {/* Spacer to avoid overlap */}
-      <div style={{ height: 72 }}></div>
     </>
   );
 }
