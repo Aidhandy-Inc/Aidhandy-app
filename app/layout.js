@@ -1,12 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import { AuthProvider } from "../context/AuthContext";
-import { useState } from "react";
 
-// Fonts
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -17,7 +16,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Metadata
 export const metadata = {
   title: "AidHandy",
   description: "Airport & inflight companion service made simple.",
@@ -27,9 +25,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const toggleMenu = () => {
-    setMobileOpen(!mobileOpen);
-  };
+  const toggleMenu = () => setMobileOpen((v) => !v);
 
   return (
     <html lang="en">
@@ -39,81 +35,58 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content={metadata.viewport} />
         <title>{metadata.title}</title>
       </head>
-
       <body
         className={`${geistSans.variable} ${geistMono.variable} bg-gray-50 text-gray-900 antialiased`}
       >
         <AuthProvider>
-          {/* NAVBAR */}
-          <nav className="w-full bg-white shadow-sm fixed top-0 left-0 z-50">
-            <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-
-              {/* LOGO */}
-              <Link href="/" className="text-xl font-semibold text-blue-600">
+          {/* TOP NAVBAR */}
+          <nav className="top-nav">
+            <div className="top-nav-inner">
+              {/* Logo */}
+              <Link href="/" className="nav-logo">
                 AidHandy
               </Link>
 
-              {/* DESKTOP MENU (HIDDEN ON MOBILE) */}
-              <div className="hidden md:flex gap-6 text-sm font-medium items-center">
-                <Link href="/" className="hover:text-blue-600">Home</Link>
-                <Link href="/contact" className="hover:text-blue-600">Contact</Link>
-                <Link href="/terms" className="hover:text-blue-600">Terms</Link>
-                <Link href="/privacy" className="hover:text-blue-600">Privacy</Link>
-                <Link
-                  href="/auth/login"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                >
+              {/* Desktop links */}
+              <div className="nav-desktop-links">
+                <Link href="/">Home</Link>
+                <Link href="/contact">Contact</Link>
+                <Link href="/terms">Terms</Link>
+                <Link href="/privacy">Privacy</Link>
+                <Link href="/auth/login" className="nav-cta">
                   Login
                 </Link>
               </div>
 
-              {/* MOBILE MENU BUTTON */}
+              {/* Mobile hamburger */}
               <button
-                className="md:hidden text-gray-700"
+                className="nav-mobile-btn"
                 onClick={toggleMenu}
+                aria-label="Toggle navigation"
               >
-                <svg
-                  className="w-7 h-7"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
+                ☰
               </button>
             </div>
 
-            {/* MOBILE DROPDOWN MENU */}
+            {/* Mobile dropdown menu */}
             {mobileOpen && (
-              <div
-                id="mobile-menu"
-                className="md:hidden w-full bg-white shadow-lg py-4 px-6 flex flex-col gap-4 text-base font-medium"
-              >
-                <Link href="/" onClick={toggleMenu} className="hover:text-blue-600">
+              <div className="nav-mobile-menu">
+                <Link href="/" onClick={toggleMenu}>
                   Home
                 </Link>
-
-                <Link href="/contact" onClick={toggleMenu} className="hover:text-blue-600">
+                <Link href="/contact" onClick={toggleMenu}>
                   Contact
                 </Link>
-
-                <Link href="/terms" onClick={toggleMenu} className="hover:text-blue-600">
+                <Link href="/terms" onClick={toggleMenu}>
                   Terms
                 </Link>
-
-                <Link href="/privacy" onClick={toggleMenu} className="hover:text-blue-600">
+                <Link href="/privacy" onClick={toggleMenu}>
                   Privacy
                 </Link>
-
                 <Link
                   href="/auth/login"
                   onClick={toggleMenu}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-center"
+                  className="nav-cta"
                 >
                   Login
                 </Link>
@@ -121,16 +94,12 @@ export default function RootLayout({ children }) {
             )}
           </nav>
 
-          {/* SPACE BELOW FIXED NAV */}
-          <div className="pt-20"></div>
+          {/* spacer so content isn't hidden under fixed nav */}
+          <div style={{ height: 72 }} />
 
-          {/* CONTENT */}
-          <main className="min-h-screen">
-            {children}
-          </main>
+          <main>{children}</main>
 
-          {/* FOOTER */}
-          <footer className="w-full py-6 text-center text-gray-500 text-sm">
+          <footer className="site-footer">
             © {new Date().getFullYear()} AidHandy — All Rights Reserved
           </footer>
         </AuthProvider>
