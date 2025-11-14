@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* GENERAL -------------------------------------------------- */
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -36,6 +37,7 @@ body {
   text-decoration: none;
 }
 
+/* Desktop links */
 .nav-links {
   display: flex;
   gap: 20px;
@@ -50,7 +52,7 @@ body {
   color: #1d9fd8;
 }
 
-/* Mobile */
+/* Mobile toggle */
 .mobile-btn {
   display: none;
   font-size: 32px;
@@ -58,8 +60,9 @@ body {
   border: none;
 }
 
+/* MOBILE MENU (default hidden) ---------------------------- */
 .mobile-menu {
-  display: none;
+  display: none;              /* <-- IMPORTANT */
   flex-direction: column;
   gap: 12px;
   background: white;
@@ -67,17 +70,18 @@ body {
   border-bottom: 1px solid #e5e7eb;
 }
 
-/* RESPONSIVE --------------------------------------------- */
+/* When toggled open */
+.mobile-menu.active {
+  display: flex;              /* <-- ONLY SHOW WHEN ACTIVE */
+}
+
+/* RESPONSIVE ---------------------------------------------- */
 @media (max-width: 768px) {
   .nav-links {
-    display: none;
+    display: none;            /* Hide desktop nav */
   }
 
   .mobile-btn {
-    display: block;
-  }
-
-  .mobile-menu {
-    display: flex;
+    display: block;           /* Show hamburger */
   }
 }
