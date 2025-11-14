@@ -1,50 +1,47 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
+import { useEffect } from "react";
 
 export default function Home() {
-
   useEffect(() => {
-    if (localStorage.getItem("ah_cookie") === null) {
-      const c = document.getElementById("cookie");
-      if (c) c.style.display = "block";
+    const cookie = document.getElementById("cookie");
+    if (cookie && !localStorage.getItem("ah_cookie")) {
+      cookie.style.display = "block";
     }
   }, []);
 
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 16px" }}>
-      
-      <section style={{ marginTop: 40, textAlign: "center" }}>
-        <h1 style={{ fontSize: "clamp(28px, 6vw, 46px)", fontWeight: 700 }}>
+
+      <section style={{ textAlign: "center", marginTop: 40 }}>
+        <h1 style={{ fontSize: "clamp(28px,6vw,48px)", fontWeight: "700" }}>
           Together, every flight feels easier.
         </h1>
 
         <p style={{ marginTop: 12, fontSize: 18, color: "#555" }}>
-          Airport + in-flight companion support, simplified.
+          Airport + inflight companion support, simplified.
         </p>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 20 }}>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 20 }}>
           <a href="#book" style={{
-            background: "#1D9FD8",
+            background: "#1d9fd8",
             color: "#fff",
             padding: "10px 16px",
             borderRadius: 8,
             textDecoration: "none",
             fontWeight: 600
           }}>
-            Get started
+            Get Started
           </a>
-
           <Link href="/privacy" style={{
-            border: "1px solid #1D9FD8",
-            color: "#1D9FD8",
+            border: "1px solid #1d9fd8",
+            color: "#1d9fd8",
             padding: "10px 16px",
             borderRadius: 8,
-            textDecoration: "none",
-            fontWeight: 600
+            textDecoration: "none"
           }}>
-            Privacy Policy
+            Privacy-first
           </Link>
         </div>
       </section>
@@ -57,13 +54,13 @@ export default function Home() {
           background: "#fff"
         }}>
           <h2>Join as a Companion</h2>
-          <p>Fill the interest form to join the early list.</p>
+          <p>Fill out the early interest form.</p>
 
           <iframe
             src="https://docs.google.com/forms/d/e/1FAIpQLSfS955PSpGmBXbM7xUatap6uERhr8_rEs5Bj4TgJ-Fy-Pjd3w/viewform?embedded=true"
             width="100%"
-            height="1600"
-            style={{ border: 0, marginTop: 16 }}
+            height="1550"
+            style={{ border: 0, marginTop: 12 }}
           ></iframe>
         </div>
       </section>
@@ -101,7 +98,6 @@ export default function Home() {
           >
             Accept
           </button>
-
           <button
             onClick={() => {
               localStorage.setItem("ah_cookie", "0");
