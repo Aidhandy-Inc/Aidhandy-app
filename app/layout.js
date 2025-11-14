@@ -1,5 +1,3 @@
-"use client";
-
 import "../globals.css";
 import Navbar from "./navbar.jsx";
 
@@ -13,7 +11,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <Navbar />
-        <div style={{ height: "72px" }}></div>
+        <div style={{ height: "72px" }} />
         {children}
       </body>
     </html>
