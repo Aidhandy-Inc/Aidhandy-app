@@ -1,8 +1,6 @@
 import "./globals.css";
 import Navbar from "../components/Navbar.jsx";
-// FIX: Changed alias import to relative path:
-// Assuming 'context' folder is at the root level (one level above 'app')
-import AuthProvider from "../context/AuthContext";
+import { AuthProvider } from "../context/AuthContext";
 
 export const metadata = {
   title: "AidHandy",
