@@ -1,5 +1,5 @@
-import "./globals.css";
-import Navbar from "../components/Navbar.jsx";
+import "../app/globals.css";
+import Navbar from "./navbar.jsx";
 import { AuthProvider } from "../context/AuthContext";
 
 export const metadata = {
@@ -13,10 +13,8 @@ export default function RootLayout({ children }) {
       <body>
         <AuthProvider>
           <Navbar />
-          {/* Main content wrapper with pt-16 to create space below the fixed Navbar */}
-          <main className="pt-16 min-h-screen">
-            {children}
-          </main>
+          <div style={{ height: "72px" }} />
+          {children}
         </AuthProvider>
       </body>
     </html>
