@@ -1,120 +1,90 @@
-"use client";
+// Set this component to run on the client if it uses client-side hooks like useState, 
+// or remove this line if it's purely server-side rendered.
+// 'use client'; 
 
-import Link from "next/link";
-import { useEffect } from "react";
+import React from 'react';
 
 export default function Home() {
-  useEffect(() => {
-    const cookie = document.getElementById("cookie");
-    if (cookie && !localStorage.getItem("ah_cookie")) {
-      cookie.style.display = "block";
-    }
-  }, []);
-
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 16px" }}>
+    <div className="min-h-screen bg-gray-50 text-gray-800">
 
-      <section style={{ textAlign: "center", marginTop: 40 }}>
-        <h1 style={{ fontSize: "clamp(28px,6vw,48px)", fontWeight: "700" }}>
-          Together, every flight feels easier.
+      {/* 1. HERO SECTION: Title and Button */}
+      {/* Uses large vertical padding on mobile (py-16), larger on desktop (lg:py-24) */}
+      <section className="py-16 text-center bg-white shadow-md">
+        {/* Title: Large font on mobile, Extra Large on desktop */}
+        <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl mb-4">
+          AidHandy: Travel Simplified
         </h1>
-
-        <p style={{ marginTop: 12, fontSize: 18, color: "#555" }}>
-          Airport + inflight companion support, simplified.
+        {/* Subtitle: Normal font on mobile, Larger on desktop */}
+        <p className="text-lg text-gray-600 mb-8 sm:text-xl max-w-2xl mx-auto">
+          Your reliable airport and inflight companion service, designed for peace of mind.
         </p>
+        
+        {/* Call-to-Action Button */}
+        <a 
+          href="/auth/login" 
+          className="inline-block px-8 py-3 text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition duration-150"
+        >
+          Get Started Now
+        </a>
+      </section>
 
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 20 }}>
-          <a href="#book" style={{
-            background: "#1d9fd8",
-            color: "#fff",
-            padding: "10px 16px",
-            borderRadius: 8,
-            textDecoration: "none",
-            fontWeight: 600
-          }}>
-            Get Started
-          </a>
-          <Link href="/privacy" style={{
-            border: "1px solid #1d9fd8",
-            color: "#1d9fd8",
-            padding: "10px 16px",
-            borderRadius: 8,
-            textDecoration: "none"
-          }}>
-            Privacy-first
-          </Link>
+      {/* 2. FEATURES SECTION: Responsive Grid */}
+      {/* p-8 on mobile, p-12 on desktop */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8">
+        <h2 className="text-3xl font-bold text-center mb-10">Why Choose AidHandy?</h2>
+        
+        {/* GRID LAYOUT: 
+           - Mobile: grid-cols-1 (1 column, items stack vertically)
+           - Medium (Tablet): md:grid-cols-2 (2 columns)
+           - Large (Desktop): lg:grid-cols-3 (3 columns) 
+        */}
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+          
+          {/* Feature Card 1 */}
+          <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition">
+            <h3 className="text-xl font-semibold mb-3">Seamless Assistance</h3>
+            <p className="text-gray-600">
+              Get real-time companion support from check-in to your destination gate.
+            </p>
+          </div>
+          
+          {/* Feature Card 2 */}
+          <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition">
+            <h3 className="text-xl font-semibold mb-3">Simple Booking</h3>
+            <p className="text-gray-600">
+              Easily book services through our simplified, mobile-friendly interface.
+            </p>
+          </div>
+          
+          {/* Feature Card 3 */}
+          <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition">
+            <h3 className="text-xl font-semibold mb-3">Supabase Integration</h3>
+            <p className="text-gray-600">
+              Secure authentication and data storage powered by Supabase.
+            </p>
+          </div>
+          
         </div>
       </section>
 
-      <section id="book" style={{ marginTop: 40 }}>
-        <div style={{
-          border: "1px solid #e5e7eb",
-          borderRadius: 14,
-          padding: 20,
-          background: "#fff"
-        }}>
-          <h2>Join as a Companion</h2>
-          <p>Fill out the early interest form.</p>
-
-          <iframe
-            src="https://docs.google.com/forms/d/e/1FAIpQLSfS955PSpGmBXbM7xUatap6uERhr8_rEs5Bj4TgJ-Fy-Pjd3w/viewform?embedded=true"
-            width="100%"
-            height="1550"
-            style={{ border: 0, marginTop: 12 }}
-          ></iframe>
+      {/* 3. CALL TO ACTION (CTA) SECTION */}
+      {/* Text Alignment: Centered on mobile, Left-aligned on large screens */}
+      <section className="bg-blue-500 text-white p-10 mt-12">
+        <div className="max-w-6xl mx-auto flex flex-col items-center lg:flex-row lg:justify-between">
+            <div className="text-center lg:text-left mb-6 lg:mb-0">
+                <h2 className="text-2xl font-bold mb-2">Ready to travel with ease?</h2>
+                <p className="text-blue-200">Sign up today and experience stress-free travel assistance.</p>
+            </div>
+            <a 
+              href="/auth/login" 
+              className="px-8 py-3 text-base font-medium rounded-md text-blue-600 bg-white hover:bg-gray-100 transition duration-150"
+            >
+              Sign Up
+            </a>
         </div>
       </section>
-
-      <div
-        id="cookie"
-        style={{
-          display: "none",
-          position: "fixed",
-          bottom: 20,
-          left: 16,
-          right: 16,
-          background: "#0b1220",
-          color: "#eee",
-          padding: 16,
-          borderRadius: 10
-        }}
-      >
-        AidHandy uses cookies. See{" "}
-        <Link href="/privacy" style={{ color: "#60a5fa" }}>
-          Privacy Policy
-        </Link>.
-        <div style={{ marginTop: 10, display: "flex", gap: 12 }}>
-          <button
-            onClick={() => {
-              localStorage.setItem("ah_cookie", "1");
-              document.getElementById("cookie").style.display = "none";
-            }}
-            style={{
-              background: "#22c55e",
-              border: "none",
-              padding: "8px 14px",
-              borderRadius: 8
-            }}
-          >
-            Accept
-          </button>
-          <button
-            onClick={() => {
-              localStorage.setItem("ah_cookie", "0");
-              document.getElementById("cookie").style.display = "none";
-            }}
-            style={{
-              background: "#475569",
-              border: "none",
-              padding: "8px 14px",
-              borderRadius: 8
-            }}
-          >
-            Decline
-          </button>
-        </div>
-      </div>
-
+      
     </div>
   );
 }
