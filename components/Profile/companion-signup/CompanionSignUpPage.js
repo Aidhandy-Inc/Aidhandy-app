@@ -34,7 +34,7 @@ export default function CompanionSignUpPage({ email , profile }) {
       dob: "",
       gender: "",
       phoneVerified: false,
-      emailVerified: false,
+      // emailVerified: false,
     },
     services: {
       serviceTypes: [],
@@ -107,7 +107,7 @@ export default function CompanionSignUpPage({ email , profile }) {
 
     // << ADD THIS >>
     if (!basics.phoneVerified) errs.phoneVerified = "Phone number not verified";
-     if (!basics.emailVerified) errs.emailVerified = "Email not verified";
+    //  if (!basics.emailVerified) errs.emailVerified = "Email not verified";
 
     return errs;
   };

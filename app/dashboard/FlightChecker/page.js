@@ -29,7 +29,6 @@ export default function FlightChecker() {
   const [userFlight, setUserFlight] = useState(null);
   const [selectedFlight, setSelectedFlight] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [userRole, setUserRole] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const flightsPerPage = 10;

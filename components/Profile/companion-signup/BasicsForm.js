@@ -16,12 +16,12 @@ const BasicsForm = ({ form, update, errors, emailFromProps, profile }) => (
     )}
 
     {/* ✅ Email Verification Component */}
-    <EmailVerification
+    {/* <EmailVerification
       profile={profile}
       email={emailFromProps || form.email}
       error={errors.emailVerified}
       onVerified={(flag) => update("emailVerified", flag)}
-    />
+    /> */}
 
     {/* ✅ Phone OTP Input */}
     <PhoneOtpInput
@@ -63,6 +63,8 @@ const BasicsForm = ({ form, update, errors, emailFromProps, profile }) => (
         <option value="">Select gender</option>
         <option value="male">Male</option>
         <option value="female">Female</option>
+        <option value="female">Non-Binary</option>
+        <option value="female">Prefer not to say</option>
       </select>
       {errors.gender && (
         <p className="text-rose-600 text-sm mt-1">{errors.gender}</p>
