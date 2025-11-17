@@ -2,13 +2,14 @@ name: CI Quality Gates
 
 on:
   pull_request:
-    branches: [main, staging]
+    branches: [staging]
   push:
-    branches: [main, staging, feature/duffel-seatmap]
+    branches: [staging]
 
 jobs:
   quality-gates:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,9 +32,7 @@ jobs:
       - name: Build verification
         run: npm run build
         env:
-          # Use the exact same names as your .env file
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          # Add empty values for other required public variables
-          NEXT_PUBLIC_DUFFEL_API_KEY: "dummy_value_for_build"
-          NEXT_PUBLIC_SENTRY_DSN: ""
+          NEXT_PUBLIC_DUFFEL_API_KEY: "dummy"
+          NEXT_PUBLIC_SENTRY_DSN: "dummy"

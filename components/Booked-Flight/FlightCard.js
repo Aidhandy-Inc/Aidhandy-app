@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/libs/supabaseClient";
 
 const FlightCard = ({ flight, onUpdate }) => {
+  console.log(flight)
   const [isLoading, setIsLoading] = useState(false);
 
   const handleCancelFlight = async () => {
@@ -54,10 +55,25 @@ const FlightCard = ({ flight, onUpdate }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div>
-          <p className="text-sm text-gray-500">Departure</p>
+          <p className="text-sm text-gray-500">Departure At</p>
           <p className="font-medium">
-            {new Date(flight.departure_date).toLocaleDateString()} at {flight.departure_time}
+            {new Date(flight.departure_date).toLocaleDateString()} {flight.departure_time}
           </p>
+        </div>
+         <div>
+          <p className="text-sm text-gray-500">Arrival At</p>
+          <p className="font-medium">
+            {new Date(flight.arrival_date).toLocaleDateString()} {flight.arrival_time}
+          </p>
+        </div>
+          <div>
+          <p className="text-sm text-gray-500">Departure Airport</p>
+          <p className="font-medium">{flight.departure_airport
+}</p>
+        </div>
+         <div>
+          <p className="text-sm text-gray-500">Destination Airport</p>
+          <p className="font-medium">{flight.destination_airport}</p>
         </div>
         <div>
           <p className="text-sm text-gray-500">Seat</p>

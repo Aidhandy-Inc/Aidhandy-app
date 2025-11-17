@@ -7,6 +7,7 @@ import { userBookedFlights } from "@/hooks/userBookedFlights";
 import FlightFilters from "@/components/Booked-Flight/FlightFilters";
 import FlightCard from "@/components/Booked-Flight/FlightCard";
 import BackButton from "@/components/common/BackButton";
+import { useUser } from "@/context/ClientProvider";
 
 export default function BookedFlightsPage() {
   const [user, setUser] = useState(null);
@@ -33,7 +34,6 @@ export default function BookedFlightsPage() {
 
     return () => subscription.unsubscribe();
   }, []);
-
   const {
     data: flights,
     isLoading,
@@ -50,20 +50,18 @@ export default function BookedFlightsPage() {
     if (filters.date !== "all") {
       const flightDate = new Date(flight.departure_date);
       const today = new Date();
-      
+
       if (filters.date === "upcoming" && flightDate < today) return false;
       if (filters.date === "past" && flightDate >= today) return false;
     }
     return true;
   });
+
   if (isLoading) return <LoadingState />;
-  
+
   if (error) {
     return (
-      <ErrorState 
-        message="Failed to load booked flights"
-        onRetry={refetch}
-      />
+      <ErrorState message="Failed to load booked flights" onRetry={refetch} />
     );
   }
 
@@ -80,8 +78,8 @@ export default function BookedFlightsPage() {
         </div>
 
         {/* Filters */}
-        <FlightFilters 
-          filters={filters} 
+        <FlightFilters
+          filters={filters}
           onFiltersChange={setFilters}
           flightCount={filteredFlights?.length || 0}
           totalCount={flights?.length || 0}
@@ -103,19 +101,14 @@ export default function BookedFlightsPage() {
                 No flights found
               </h3>
               <p className="text-gray-500">
-                {flights?.length === 0 
+                {flights?.length === 0
                   ? "You haven't booked any flights yet."
-                  : "No flights match your current filters."
-                }
+                  : "No flights match your current filters."}
               </p>
             </div>
           ) : (
             filteredFlights?.map((flight) => (
-              <FlightCard 
-                key={flight.id} 
-                flight={flight} 
-                onUpdate={refetch}
-              />
+              <FlightCard key={flight.id} flight={flight} onUpdate={refetch} />
             ))
           )}
         </div>

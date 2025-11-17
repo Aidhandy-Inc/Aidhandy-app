@@ -7,6 +7,7 @@ on:
 jobs:
   quality-checks:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,18 +28,19 @@ jobs:
         run: npm test || echo "No tests - skipping"
 
       - name: Build verification
-  run: npm run build
-  env:
-    NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-    NEXT_PUBLIC_DUFFEL_API_KEY: "dummy_value_for_build"
-    NEXT_PUBLIC_SENTRY_DSN: ""
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_DUFFEL_API_KEY: "dummy"
+          NEXT_PUBLIC_SENTRY_DSN: "dummy"
 
   trigger-vercel:
     needs: quality-checks
     runs-on: ubuntu-latest
+
     steps:
       - name: Trigger Vercel Production Deployment
         run: |
-          echo "All quality checks passed! Vercel will now auto-deploy the main branch to production."
-          echo "Production deployment triggered for commit: ${{ github.sha }}"
+          echo "Production checks passed!"
+          echo "Vercel will now auto-deploy main branch."

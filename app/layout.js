@@ -1,19 +1,11 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "../context/AuthContext";
+// import { AuthProvider } from "../context/AuthContext";
 import * as Sentry from "@sentry/nextjs";
 import Providers from "./providers/tancstack";
 import Header from "@/components/common/Header";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { getUserAndProfile } from "@/libs/getUserData";
+import { ClientProvider } from "@/context/ClientProvider";
+import HeaderWrapper from "@/components/layout/HeaderWrapper";
 
 export const metadata = {
   title: "AidHandy App",
@@ -21,7 +13,9 @@ export const metadata = {
   viewport: "width=device-width, initial-scale=1",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  // ✅ Server-side fetch for initial SSR render
+  const { user, profile } = await getUserAndProfile();
   return (
     <html lang="en">
       <head>
@@ -30,19 +24,22 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content={metadata.viewport} />
         <title>{metadata.title}</title>
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 text-gray-900`}
-      >
+      <body className="antialiased bg-gray-50 text-gray-900">
+         {/* ✅ Header gets server-side profile directly */}
+         <HeaderWrapper profile={profile} />
         <Providers>
+          
+        {/* ✅ Make data globally available to all client components */}
+        <ClientProvider user={user} profile={profile}>
           <Sentry.ErrorBoundary
             fallback={<p>Something went wrong. Our team has been notified.</p>}
           >
-            <AuthProvider>
-              <Header />
-
+            {/* <AuthProvider> */}
+              {/* <Header /> */}
               {children}
-              </AuthProvider>
+            {/* </AuthProvider> */}
           </Sentry.ErrorBoundary>
+          </ClientProvider>
         </Providers>
       </body>
     </html>

@@ -1,21 +1,23 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { fetchAmadeusToken } from "@/libs/amadeusToken";
 import { supabase } from "@/libs/supabaseClient";
 import PathSelector from "@/components/Flight/PathSelector";
 import RouteForm from "@/components/Flight/RouteForm";
 import FlightList from "@/components/Flight/FlightList";
 import ConfirmModal from "@/components/Flight/ConfirmModal";
-import BookedFlightInfo from "@/components/Flight/BookedFlightInfo";
 import DuffelFlightList from "@/components/Flight/DuffelFlightList";
 import SeatMapModalDuffel from "@/components/Seat/SeatMapModalDuffel";
-import { getUserRole } from "@/utils/getUserRole";
 import BackButton from "@/components/common/BackButton";
 import LoadingState from "@/components/Profile/LoadingState";
+import SearchByFlightNo from "@/components/Flight/BookedFlightInfo";
+import Loader from "@/components/common/Loader";
+import { useUser } from "@/context/ClientProvider";
+import AuthLogin from "@/components/common/AuthModal";
+import CompanionProfileModal from "@/components/Seat/PublicProfileCompanion";
+import Sentry from "@/sentry.client.config";
 
 export default function FlightChecker() {
-  const { user, loading } = useAuth();
+  const { user, profile } = useUser();
   const [selectedPath, setSelectedPath] = useState(null);
   const [flightData, setFlightData] = useState({
     departure_airport: "",
@@ -31,7 +33,6 @@ export default function FlightChecker() {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const flightsPerPage = 10;
-
   // Seatmap and companion states
   const [seatmapData, setSeatmapData] = useState(null);
   const [loadingSeatmap, setLoadingSeatmap] = useState(false);
@@ -40,27 +41,120 @@ export default function FlightChecker() {
   const [companions, setCompanions] = useState([]);
   const [selectedCompanion, setSelectedCompanion] = useState(null);
   const [pairingId, setPairingId] = useState(null);
+  // For Public Users To See Companions
+  const [showCompanionAuthModal, setShowCompanionAuthModal] = useState(false);
+  const [companionDataAuth, setCompanionDataAuth] = useState([]);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
- useEffect(() => {
-  const fetchUserRole = async () => {
-    const userRole = await getUserRole(user.id);
-    console.log(userRole);
-    setUserRole(userRole);
-  };
-  fetchUserRole();
-}, [user]);
-  // ! Flight Search Handler
+  // ! Flight Search Handler When Not Booked
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user) return alert("Please login first!");
+    if (
+      selectedPath === 2 &&
+      (!profile || // No profile exists
+        profile.type === "traveller") // Or profile exists and is a traveller
+    ) {
+      setSubmitting(true);
+      try {
+        const travelDate = new Date(
+          flightData.preferred_date || flightData.departure_date
+        )
+          .toISOString()
+          .split("T")[0];
+
+        if (!travelDate) {
+          console.warn("⚠️ Missing departure date in flightData");
+          setSubmitting(false);
+          return;
+        }
+
+        // ✅ Fetch companions with their flight data
+        const { data: companions, error } = await supabase
+          .from("bookings")
+          .select("*")
+          .eq("departure_iata", flightData.departure_airport)
+          .eq("destination_iata", flightData.destination_airport)
+          .eq("departure_date", travelDate);
+
+        if (error) {
+          console.log("❌ Error fetching companions:", error);
+          setSubmitting(false);
+          return;
+        }
+
+        if (!companions || companions.length === 0) {
+          console.log("⚠️ No matching companions found");
+          setSubmitting(false);
+          return;
+        }
+
+        // ✅ ONLY query companions table (remove the users table query entirely)
+        const companionsWithProfiles = await Promise.all(
+          companions.map(async (companion) => {
+            // ✅ Use user_id instead of id to match the relationship
+            const { data: companionProfile, error: companionError } =
+              await supabase
+                .from("companions")
+                .select(
+                  "full_name, email, phone, profile_photo_url, gender, languages, short_bio"
+                )
+                .eq("user_id", companion.traveler_id) // Changed from 'id' to 'user_id'
+                .single();
+
+            if (companionError) {
+              console.log(
+                `❌ Error fetching companion profile for ${companion.traveler_id}:`,
+                companionError
+              );
+              return {
+                ...companion,
+                profile: {
+                  full_name: "Unknown Traveler",
+                  profile_photo_url: null,
+                  email: null,
+                  phone: null,
+                },
+              };
+            }
+
+            // Successfully found the companion profile
+            return {
+              ...companion,
+              profile: companionProfile,
+            };
+          })
+        );
+        if (companionsWithProfiles?.length > 0) {
+          setSubmitting(false);
+          setCompanionDataAuth(companionsWithProfiles);
+          setShowCompanionAuthModal(true);
+
+          return;
+        }
+      } catch (err) {
+        console.log("Unexpected error fetching companions:", err);
+        setSubmitting(false);
+        return;
+      }
+    }
     setSubmitting(true);
     // ! For Duffel Flight Search
     try {
+      let supabaseToken;
+
+      // Try to get logged-in user's token
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session) await supabase.auth.refreshSession();
-      const supabaseToken = session?.access_token;
+
+      if (session) {
+        // Logged-in user - use their access token
+        supabaseToken = session.access_token;
+      } else {
+        // Anonymous user - use anon key
+        supabaseToken = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      }
+
       const searchData = {
         data: {
           slices: [
@@ -74,28 +168,47 @@ export default function FlightChecker() {
           cabin_class: "economy",
         },
       };
-      const res = await fetch("/api/duffel-flights", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${supabaseToken}`,
-        },
-        body: JSON.stringify(searchData),
-      });
+
+      // Call supabase edge function
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/duffel-flights`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${supabaseToken}`,
+          },
+          body: JSON.stringify(searchData),
+        }
+      );
 
       const data = await res.json();
 
+      // Handle errors or success
       if (!res.ok) {
         setResponse({
           success: false,
-          message: data.errors?.[0]?.message || "Duffel API error",
+          message:
+            data.error?.message ||
+            data.error ||
+            data.errors?.[0]?.message ||
+            "Duffel API error",
         });
       } else {
+        // Check if user is anonymous
+        if (data.metadata?.isAnonymous) {
+          console.log("Anonymous user search");
+          // Optional: Show login prompt
+        }
+
         setResponse(data.data || null);
       }
     } catch (err) {
       console.error("Duffel flight search error:", err);
-      setResponse({ success: false, message: "Error fetching Duffel flights" });
+      setResponse({
+        success: false,
+        message: "Error fetching Duffel flights",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -141,44 +254,55 @@ export default function FlightChecker() {
     // }
     setSubmitting(false);
   };
-  // ! Flight Selection Handler And Seatmap + Companion Search
+  // Flight Selection Handler And Seatmap + Companion Search When Not Booked
   const handleSelectFlight = async (flight) => {
-    if (!user) return alert("Please login first");
+    setSubmitting(true);
     setSelectedFlight(flight);
-
     try {
+      let supabaseToken;
+
+      // Try to get logged-in user's token
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session) await supabase.auth.refreshSession();
-      const supabaseToken = session?.access_token;
 
-      // Get role from database
-      const userRole = await getUserRole(session.user.id);
+      if (session) {
+        // Logged-in user - use their access token
+        supabaseToken = session.access_token;
+      } else {
+        // Anonymous user - use anon key
+        supabaseToken = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      }
 
       setLoadingSeatmap(true);
 
-      // 1. Fetch seatmap (both travelers and companions need this)
-      const seatmapRes = await fetch("/api/duffel-seatmaps", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${supabaseToken}`,
-        },
-        body: JSON.stringify({ offer_id: flight.id }),
-      });
+      // ! 1. Fetch seatmaps for selected flight
+      const seatmapRes = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/duffel-seatmaps`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${supabaseToken}`,
+          },
+          body: JSON.stringify({ offer_id: flight.id }),
+        }
+      );
 
       const seatmapData = await seatmapRes.json();
 
       if (!seatmapRes.ok) {
+        setSubmitting(false);
         alert(
           `Seatmap fetch failed: ${
-            seatmapData.errors?.[0]?.message || "Unknown error"
+            seatmapData.error?.message ||
+            seatmapData.error ||
+            seatmapData.errors?.[0]?.message ||
+            "Unknown error"
           }`
         );
         return;
       }
-
       // 2. Extract flight details (both need this)
       const firstSlice = flight.slices?.[0];
       const firstSegment = firstSlice?.segments?.[0];
@@ -202,7 +326,7 @@ export default function FlightChecker() {
       let companionsData = [];
 
       // 3. ONLY search for companions if user is a traveler
-      if (userRole === "traveller") {
+      if (profile === null || profile?.type === "traveller") {
         const flightDetails = {
           flight_number: flightNumber,
           date: flightDate,
@@ -210,18 +334,22 @@ export default function FlightChecker() {
         };
 
         // Call our API route to search for companions
-        const companionsRes = await fetch("/api/search-companions-duffel", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${supabaseToken}`,
-          },
-          body: JSON.stringify(flightDetails),
-        });
+        const companionsRes = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/search-companions-duffel`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${supabaseToken}`,
+            },
+            body: JSON.stringify(flightDetails),
+          }
+        );
 
         // Handle non-JSON responses
         const contentType = companionsRes.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
+          setSubmitting(false);
           const textResponse = await companionsRes.text();
           console.error(
             "❌ Non-JSON response:",
@@ -233,11 +361,13 @@ export default function FlightChecker() {
         const companionsResult = await companionsRes.json();
 
         if (companionsRes.ok && companionsResult.success) {
+          setSubmitting(false);
           companionsData = companionsResult.companions || [];
           console.log(
             `✅ Found ${companionsData.length} companions for traveler`
           );
         } else {
+          setSubmitting(false);
           console.error("❌ Companion search failed:", companionsResult);
           // Show user-friendly error
           const errorMessage =
@@ -247,34 +377,34 @@ export default function FlightChecker() {
           alert(`Companion search error: ${errorMessage}`);
         }
       } else {
-        console.log(`👤 User is ${userRole}, skipping companion search`);
+        setSubmitting(false);
+        console.log(`👤 User is ${profile?.type}, skipping companion search`);
       }
+      setSubmitting(false);
       setSeatmapData(seatmapData);
       setCompanions(companionsData);
       setShowSeatmap(true);
-
-      // Show appropriate message based on role
-      if (userRole === "traveller") {
-        console.log("✅ Seatmap with companions fetched for traveler");
-      } else {
-        console.log("✅ Seatmap fetched for companion (no companion search)");
-      }
     } catch (err) {
       console.error("❌ Error fetching data:", err);
       alert("Error fetching flight data. Please try again.");
     } finally {
+      setSubmitting(false);
       setLoadingSeatmap(false);
     }
   };
   const handleSeatSelect = (seat) => {
+    if (profile === null) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+
     setSelectedSeat(seat);
   };
-  // ! Show Modal After Companion Selection And Seat Confirmation
+  // Show Modal After Companion Selection And Seat Confirmation When Not Booked
   const handleCompanionSelect = async (companion) => {
     setSelectedCompanion(companion);
 
-    const userRole = await getUserRole(user.id);
-    if (userRole === "companion") {
+    if (profile?.role === "companion") {
       alert(
         "Companions cannot book other companions. You are already a helper!"
       );
@@ -285,8 +415,12 @@ export default function FlightChecker() {
       `✅ Selected ${companion.full_name}! Now select an adjacent seat to complete pairing.`
     );
   };
-  // ! Confirm Seat And Create Pairing If Companion Selected
+  // Confirm Seat And Create Pairing If Companion Selected When Not Booked
   const handleConfirmSeat = async () => {
+    if (profile === null) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     if (!selectedSeat) {
       alert("Please select a seat first");
       return;
@@ -390,97 +524,98 @@ export default function FlightChecker() {
       alert("Error creating pairing.");
     }
   };
+  // Confirm Booking Handler When Not Booked
   const confirmBooking = async () => {
+    if (profile === null) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     if (!selectedFlight) return;
-
+    setSubmitting(true);
     const firstSlice = selectedFlight.slices?.[0];
     const segments = firstSlice?.segments || [];
-    const firstSegment = segments[0];
-    const lastSegment = segments[segments.length - 1];
 
-    // Safe data extraction using slices structure
-    const booking = {
-      traveler_id: user.id,
-      flight_number:
-        firstSegment?.marketing_carrier_flight_number ||
-        firstSegment?.number ||
-        "Unknown",
-      airline_name:
-        firstSegment?.marketing_carrier?.iata_code ||
-        selectedFlight.owner?.iata_code ||
-        "Unknown",
-      departure_date:
-        firstSegment?.departing_at?.split("T")[0] ||
-        firstSegment?.departure?.at?.split("T")[0] ||
-        flightData.preferred_date,
-      arrival_date:
-        lastSegment?.arriving_at?.split("T")[0] ||
-        lastSegment?.arrival?.at?.split("T")[0] ||
-        flightData.preferred_date,
-      seat_number: selectedSeat?.name || "TBD",
-      status: "confirmed",
-      created_at: new Date().toISOString(),
-    };
+    let stopDescription = "Nonstop";
+
+    if (segments.length > 1) {
+      const connectionCount = segments.length - 1;
+      // Get all connection (layover) airports between origin and final destination
+      const connectionAirports = segments
+        .slice(0, -1)
+        .map(
+          (segment) =>
+            segment.destination?.name ||
+            segment.destination?.iata_code ||
+            "Unknown Airport"
+        );
+
+      stopDescription = `${connectionCount} connection${
+        connectionCount > 1 ? "s" : ""
+      } via ${connectionAirports.join(", ")}`;
+    }
+    // if (profile?.role !== "traveller") {
+    //   setSubmitting(false);
+    //   alert("Only travellers can book flights.");
+    //   return;
+    // }
 
     try {
-      const { data: bookingData, error: bookingError } = await supabase
-        .from("bookings")
-        .insert([booking])
-        .select();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      if (bookingError) throw bookingError;
-      // 🚨 FIX: Update companion with booking_id
-      const userRole = await getUserRole(user.id);
-      if (userRole === "companion") {
-        const { error: companionError } = await supabase
-          .from("companions")
-          .update({
-            booking_id: bookingData[0].id,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("user_id", user.id);
+      if (!session) await supabase.auth.refreshSession();
+      const supabaseToken = session?.access_token;
 
-        if (companionError) {
-          console.error("Companion update error:", companionError);
-        } else {
-          console.log("✅ Companion booking_id updated:", bookingData[0].id);
-        }
-      }
-
-      // 2. If paired with companion, update pairing status
-      if (pairingId) {
-        const { error: pairingError } = await supabase
-          .from("pairings")
-          .update({
-            status: "confirmed",
-            seat_number: selectedSeat?.name || "TBD",
-          })
-          .eq("id", pairingId);
-
-        if (pairingError) throw pairingError;
-      }
-
-      alert(
-        "✅ Flight booked successfully!" +
-          (selectedCompanion
-            ? ` Paired with ${selectedCompanion.full_name}!`
-            : "")
+      // 🧠 Save booking context to localStorage before redirect
+      localStorage.setItem(
+        "pendingBooking",
+        JSON.stringify({
+          selectedFlight,
+          profile,
+          selectedSeat,
+          selectedCompanion,
+          pairingId,
+          stopDescription,
+        })
       );
 
-      setSelectedBooking(bookingData[0]);
-      setShowModal(false);
+      // 🔹 1. Create Stripe Checkout session
+      const stripeRes = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/duffel-confirm-booking-using-stripe`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${supabaseToken}`,
+          },
+          body: JSON.stringify({
+            selectedFlight,
+            profile,
+          }),
+        }
+      );
 
-      // Reset states
-      setSeatmapData(null);
-      setSelectedSeat(null);
-      setShowSeatmap(false);
-      setSelectedCompanion(null);
-      setPairingId(null);
-      setCompanions([]);
+      const stripeData = await stripeRes.json();
+
+      if (!stripeRes.ok) {
+        console.error("Stripe session creation failed:", stripeData);
+        alert(stripeData.error || "Failed to create Stripe Checkout session");
+        setSubmitting(false);
+        return;
+      }
+
+      // ✅ Redirect to Stripe checkout
+      if (stripeData.url) {
+        window.location.href = stripeData.url;
+        return;
+      }
+
+      setSubmitting(false);
     } catch (err) {
-      console.error("Booking save error:", err);
-      alert("Error saving booking.");
-      setShowModal(false);
+      console.error("Booking error:", err);
+      alert("Error processing booking. Please try again.");
+      setSubmitting(false);
     }
   };
 
@@ -493,17 +628,17 @@ export default function FlightChecker() {
     setCompanions([]);
     setSeatmapData(null);
   };
-  if (loading) return <LoadingState />;
-  if (!user) return <p>You must be logged in to check flights.</p>;
-
+  // if (loading) return <LoadingState />;
+  // if (!profile) return <p>You must be logged in to check flights.</p>;
   return (
     <>
+      {submitting && <Loader />}
       <BackButton text="Back" className="text-black" />
       <div
-        className={`max-w-xl mx-auto  p-6 bg-white rounded  ${
+        className={`max-w-xl mx-auto rounded  ${
           !selectedPath
             ? "h-screen flex flex-col justify-center"
-            : "shadow mt-10"
+            : " h-screen flex flex-col justify-center mt-10"
         } ${
           selectedPath === 1
             ? " "
@@ -513,21 +648,39 @@ export default function FlightChecker() {
         <h1 className="text-2xl font-bold mb-6 text-center">Flight Checker</h1>
         {!selectedPath && <PathSelector setSelectedPath={setSelectedPath} />}
         {selectedPath === 1 && (
-          <BookedFlightInfo
-            userFlight={userFlight}
-            handleSubmit={handleSubmit}
-            submitting={submitting}
-          />
+          <>
+            <BackButton
+              text="Back"
+              path={"/dashboard/FlightChecker"}
+              selected={selectedPath === 1}
+              setSelectedPath={setSelectedPath}
+              className="text-black"
+            />
+            <SearchByFlightNo
+              userFlight={userFlight}
+              handleSubmit={handleSubmit}
+              submitting={submitting}
+            />
+          </>
         )}
         {selectedPath === 2 && (
-          <RouteForm
-            userRole={userRole}
-            flightData={flightData}
-            setFlightData={setFlightData}
-            handleSubmit={handleSubmit}
-            submitting={submitting}
-            setSelectedPath={setSelectedPath}
-          />
+          <>
+            <BackButton
+              text="Back"
+              path={"/dashboard/FlightChecker"}
+              selected={selectedPath === 2}
+              setSelectedPath={setSelectedPath}
+              className="text-black"
+            />
+            <RouteForm
+              userRole={profile?.type}
+              flightData={flightData}
+              setFlightData={setFlightData}
+              handleSubmit={handleSubmit}
+              submitting={submitting}
+              setSelectedPath={setSelectedPath}
+            />
+          </>
         )}
         {/* {response && response.length > 0 && (
         <FlightList
@@ -565,6 +718,21 @@ export default function FlightChecker() {
             selectedSeat={selectedSeat}
             selectedCompanion={selectedCompanion}
           />
+        )}
+        <AuthLogin
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+        />
+        {companionDataAuth && companionDataAuth?.length > 0 && (
+          <>
+            <CompanionProfileModal
+              profile={profile}
+              companion={companionDataAuth}
+              isOpen={showCompanionAuthModal}
+              onClose={() => setShowCompanionAuthModal(false)}
+              setIsAuthModalOpen={setIsAuthModalOpen}
+            />
+          </>
         )}
       </div>
     </>
