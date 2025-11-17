@@ -361,11 +361,14 @@ export default function Login() {
       alert("Please fill in all fields before submitting.");
       return;
     }
-    const redirectUrl = `http://localhost:3000/dashboard?role=${role}&firstName=${encodeURIComponent(
+    const redirectUrl = `${
+      process.env.NEXTAUTH_URL
+    }/dashboard?role=${role}&firstName=${encodeURIComponent(
       firstName
     )}&lastName=${encodeURIComponent(lastName)}&email=${encodeURIComponent(
       email
     )}`;
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -394,7 +397,7 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `http://localhost:3000/dashboard?role=${role}`,
+        emailRedirectTo: `${process.env.NEXTAUTH_URL}/dashboard?role=${role}`,
       },
     });
 
