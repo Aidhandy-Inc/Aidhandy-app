@@ -10,20 +10,20 @@ export default async function Page(props) {
   const firstName = searchParams?.firstName || null;
   const lastName = searchParams?.lastName || null;
   const email = searchParams?.email || null;
+
   const cookieStore = await cookies();
 
-  // 🕒 Detect if Supabase is still handling the magic link
+  // Detect magic link params
   const hasMagicLinkParams =
     searchParams?.code ||
     searchParams?.access_token ||
     searchParams?.token_hash;
 
   if (hasMagicLinkParams) {
-    // 🔄 Temporarily render handler component
     return <MagicLinkHandler />;
   }
 
-  // ✅ Step 1: Create Supabase client
+  // Create Supabase client
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -36,21 +36,20 @@ export default async function Page(props) {
     }
   );
 
-  // ✅ Step 2: Fetch user & profile
+  // Fetch user & profile
   const { user, profile: existingProfile } = await getUserAndProfile();
 
-  // ✅ Step 3: Handle completely public visitors (no role, no magic link)
+  // Public visitor (no role, no magic link, no user)
   if (!role && !searchParams?.value && !user) {
     return <DashboardClient user={null} profile={null} role={null} />;
   }
 
-  // ✅ Step 4: If magic link / query params are present → continue existing flow
+  // Handle onboarding flows
   if (role) {
     let profile = existingProfile;
 
-    // ✅ Create profile if not exists
+    // Create profile if it doesn't exist
     if (!profile && role) {
-      console.log("no profile present");
       const { data: newProfile, error: insertError } = await supabase
         .from("users")
         .insert([
@@ -76,7 +75,7 @@ export default async function Page(props) {
       }
     }
 
-    // ✅ Traveller-specific logic (keep your existing code intact)
+    // Traveller onboarding: create traveller row
     if (profile?.role === "traveller" && firstName && lastName && email) {
       const { data: existingTraveller } = await supabase
         .from("travellers")
@@ -108,24 +107,23 @@ export default async function Page(props) {
               Authorization: `Bearer ${session.access_token}`,
             },
           });
-
-          console.log("Traveller added successfully.");
         }
       }
     }
 
-    // ✅ Traveller flow — show verification screen if pending
+    // FIXED VERSION (broken before)
     if (profile?.status === "pending" && role === "traveller") {
-      <div className="h-screen flex-col flex items-center justify-center">
-        <p>Please verify your email first and then refresh the page</p>;
-      </div>;
-      return;
+      return (
+        <div className="h-screen flex flex-col items-center justify-center">
+          <p>Please verify your email first and then refresh the page.</p>
+        </div>
+      );
     }
 
-    // ✅ Default return (active profile, companion, or hq)
+    // Default: authenticated dashboard
     return <DashboardClient user={user} profile={profile} role={role} />;
   }
 
-  // ✅ Step 5: Fallback for public visitor (safe)
+  // Fallback (public or logged-in returning users)
   return <DashboardClient user={user} profile={existingProfile} role={role} />;
 }
