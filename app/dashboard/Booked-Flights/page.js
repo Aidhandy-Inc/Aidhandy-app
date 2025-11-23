@@ -34,13 +34,12 @@ export default function BookedFlightsPage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const {
-    data: flights,
-    isLoading,
-    error,
-    refetch,
-    isFetching,
-  } = userBookedFlights(user?.id, { enabled: mounted && !!user?.id });
+  const shouldFetch = mounted && !!user?.id;
+const queryResult = shouldFetch 
+  ? userBookedFlights(user?.id) 
+  : { data: null, isLoading: false, error: null, refetch: () => {}, isFetching: false };
+
+const { data: flights, isLoading, error, refetch, isFetching } = queryResult;
 
   // Filter flights based on selected filters
   const filteredFlights = flights?.filter((flight) => {
