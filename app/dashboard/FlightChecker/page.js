@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/libs/supabaseClient";
@@ -17,7 +18,9 @@ import CompanionProfileModal from "@/components/Seat/PublicProfileCompanion";
 import Sentry from "@/sentry.client.config";
 
 export default function FlightChecker() {
-  const { user, profile } = useUser();
+  const userContext = useUser();
+const { user, profile } = userContext || { user: null, profile: null };
+const { user, profile } = userContext || { user: null, profile: null };
   const [selectedPath, setSelectedPath] = useState(null);
   const [flightData, setFlightData] = useState({
     departure_airport: "",
@@ -44,7 +47,9 @@ export default function FlightChecker() {
   const [showCompanionAuthModal, setShowCompanionAuthModal] = useState(false);
   const [companionDataAuth, setCompanionDataAuth] = useState([]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-
+if (!userContext) {
+  return <LoadingState />;
+}
   // ! Flight Search Handler When Not Booked
   const handleSubmit = async (e) => {
     e.preventDefault();
