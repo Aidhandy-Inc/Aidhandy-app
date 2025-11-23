@@ -11,36 +11,36 @@ import { useUser } from "@/context/ClientProvider";
 
 export default function BookedFlightsPage() {
   const [user, setUser] = useState(null);
+  const [mounted, setMounted] = useState(false);
   const [filters, setFilters] = useState({
     status: "all",
     date: "all",
   });
 
   useEffect(() => {
+    setMounted(true);
     const getUser = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
       setUser(session?.user || null);
     };
-
     getUser();
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
     });
-
     return () => subscription.unsubscribe();
   }, []);
+
   const {
     data: flights,
     isLoading,
     error,
     refetch,
     isFetching,
-  } = userBookedFlights(user?.id);
+  } = userBookedFlights(user?.id, { enabled: mounted && !!user?.id });
 
   // Filter flights based on selected filters
   const filteredFlights = flights?.filter((flight) => {
@@ -50,15 +50,14 @@ export default function BookedFlightsPage() {
     if (filters.date !== "all") {
       const flightDate = new Date(flight.departure_date);
       const today = new Date();
-
       if (filters.date === "upcoming" && flightDate < today) return false;
       if (filters.date === "past" && flightDate >= today) return false;
     }
     return true;
   });
 
+  if (!mounted) return <LoadingState />;
   if (isLoading) return <LoadingState />;
-
   if (error) {
     return (
       <ErrorState message="Failed to load booked flights" onRetry={refetch} />
@@ -76,7 +75,6 @@ export default function BookedFlightsPage() {
             Manage and view all your flight bookings
           </p>
         </div>
-
         {/* Filters */}
         <FlightFilters
           filters={filters}
@@ -84,14 +82,12 @@ export default function BookedFlightsPage() {
           flightCount={filteredFlights?.length || 0}
           totalCount={flights?.length || 0}
         />
-
         {/* Loading indicator for refetch */}
         {isFetching && !isLoading && (
           <div className="flex justify-center mb-4">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
           </div>
         )}
-
         {/* Flights List */}
         <div className="space-y-6">
           {filteredFlights?.length === 0 ? (
