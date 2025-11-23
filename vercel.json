@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  
+  // This redirect forces all traffic using the 'www' subdomain 
+  // to go to the naked root domain (aidhandy.com).
+  // This action forces Vercel's Edge Network to process a new routing rule,
+  // which can clear a stuck 404 alias.
+  "redirects": [
+    {
+      "source": "https://www.aidhandy.com/(.*)",
+      "destination": "https://aidhandy.com/$1",
+      "permanent": true,
+      "statusCode": 308 
+    }
+  ]
+}
