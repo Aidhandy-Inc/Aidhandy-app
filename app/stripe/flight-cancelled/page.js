@@ -1,5 +1,6 @@
 "use client";
-
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 export default function FlightCancelled() {
   return (
     <div className="p-8 text-center">

@@ -1,3 +1,7 @@
+"use client";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import MagicLinkHandler from "@/components/MagicLinkHandler";
 import DashboardClient from "./components/DashboardClient";
 import { getUserAndProfile } from "@/libs/getUserData";

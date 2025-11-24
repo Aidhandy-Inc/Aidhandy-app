@@ -1,4 +1,7 @@
 "use client";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import TravellerSignUpPage from "@/components/Profile/traveller-signup/TravellerSignUpPage";
 import { useUser } from "@/context/ClientProvider";
 import LoadingState from "@/components/Profile/LoadingState";

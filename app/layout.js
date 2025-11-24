@@ -1,7 +1,7 @@
 // This file must stay SERVER-SIDE.
-// Do not import useRouter, useEffect, or Supabase here.
-
 import "./globals.css";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "AidHandy",
@@ -11,9 +11,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

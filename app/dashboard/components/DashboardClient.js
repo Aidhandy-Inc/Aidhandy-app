@@ -1,4 +1,7 @@
 "use client";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import CompanionSignUpPage from "@/components/Profile/companion-signup/CompanionSignUpPage";
 import ErrorState from "@/components/Profile/ErrorState";
 import LoadingState from "@/components/Profile/LoadingState";
