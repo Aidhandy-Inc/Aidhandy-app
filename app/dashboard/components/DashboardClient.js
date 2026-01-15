@@ -72,7 +72,7 @@ export default function DashboardClient({ user, profile }) {
             profile?.is_phone_verified === false &&
             router.push("/dashboard/profile")} */}
 
-          {profile?.status === "active" && profile?.type === "traveller" ? (
+          {profile?.status === "active" && profile?.role === "traveller" ? (
             <>
               <MainCard />
             </>

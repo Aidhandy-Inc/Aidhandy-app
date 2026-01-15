@@ -107,7 +107,7 @@ export default async function Page(props) {
     }
 
     // Traveller flow — show verification screen if pending
-    if (profile?.status === "pending" || role === "traveller") {
+    if (profile?.status === "pending") {
       return (
         <div className="h-screen flex-col flex items-center justify-center">
           <p>Please verify your email first and then refresh the page</p>
