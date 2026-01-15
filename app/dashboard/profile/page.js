@@ -1,19 +1,12 @@
 "use client";
-
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+import CompanionProfilePage from "@/components/Profile/CompanionProfile/CompanionProfile";
 import TravellerSignUpPage from "@/components/Profile/traveller-signup/TravellerSignUpPage";
 import { useUser } from "@/context/ClientProvider";
-import LoadingState from "@/components/Profile/LoadingState";
+
+export const dynamic = "force-dynamic";
 
 export default function ProfilePage() {
-  const userContext = useUser();
-  const { user, profile } = userContext || { user: null, profile: null };
-
-  if (!userContext) {
-    return <LoadingState />;
-  }
-
+  const { user, profile } = useUser();
   return (
     <>
       {profile && profile?.type === "traveller" ? (
@@ -23,7 +16,13 @@ export default function ProfilePage() {
           email={profile?.email}
         />
       ) : profile && profile?.type === "companion" ? (
-        <></>
+        <>
+          <CompanionProfilePage
+            profile={profile}
+            user={user}
+            email={profile?.email}
+          />
+        </>
       ) : (
         ""
       )}

@@ -1,21 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [],
+    domains: [], // Agar external images use karni hain to yahan add karo
   },
-  eslint: {
-    ignoreDuringBuilds: true,
+  turbopack: {}, // Enable Turbopack configuration
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.ignoreWarnings = [
+        { module: /node_modules\/@opentelemetry\/instrumentation/ },
+      ];
+    }
+    return config;
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  // Disable static page generation to avoid memory issues
-  experimental: {
-    workerThreads: false,
-    cpus: 1,
-  },
-  // Fix workspace root warning
-  outputFileTracingRoot: require('path').join(__dirname),
 };
 
 module.exports = nextConfig;

@@ -1,6 +1,3 @@
-"use client";
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 export default function OnboardingRetry() {
   return (
     <div className="min-h-screen flex items-center justify-center">

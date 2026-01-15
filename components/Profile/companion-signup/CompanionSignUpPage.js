@@ -14,6 +14,7 @@ import Heading from "@/components/common/Heading";
 import { supabase } from "@/libs/supabaseClient";
 // import { sendCompanionOnboardingEmail } from "@/app/actions/email-actions";
 import YellowLoader from "@/components/common/Loader";
+import { setErrorsWithAutoDismiss } from "@/utils/dismiss-errors";
 
 export default function CompanionSignUpPage({ email , profile }) {
   const STEPS = useMemo(
@@ -28,7 +29,8 @@ export default function CompanionSignUpPage({ email , profile }) {
 
   const [formData, setFormData] = useState({
     basics: {
-      fullName: "",
+      firstName: "",
+      lastName:"",
       email: email || "",
       phone: "",
       dob: "",
@@ -95,12 +97,13 @@ export default function CompanionSignUpPage({ email , profile }) {
     const { basics } = formData;
 
     if (!profilePhoto) errs.profilePhoto = "Please Upload Profile Photo";
-    if (!basics.fullName.trim()) errs.fullName = "Full name is required";
+    if (!basics.firstName.trim()) errs.firstName = "FirstName is required";
+    if (!basics.lastName.trim()) errs.lastName = "LastName is required";
     if (!basics.dob.trim()) errs.dob = "DOB is required";
     if (!basics.gender.trim()) errs.gender = "Gender is required";
 
-    if (!email || !email.match(/^\S+@\S+\.\S+$/))
-      errs.email = "Valid email is required";
+    // if (!email || !email.match(/^\S+@\S+\.\S+$/))
+    //   errs.email = "Valid email is required";
 
     if (!basics.phone.match(/^\+?[0-9\s-]{7,20}$/))
       errs.phone = "Please enter a valid phone number";
@@ -116,7 +119,8 @@ export default function CompanionSignUpPage({ email , profile }) {
     const validators = {
       basics: () => {
         const errs = validateBasics();
-        setErrors(errs);
+         setErrorsWithAutoDismiss(errs , setErrors);
+        // setErrors(errs);
         return Object.keys(errs).length === 0;
       },
       bio: () => {
@@ -124,7 +128,8 @@ export default function CompanionSignUpPage({ email , profile }) {
         const errs = {};
 
         if (!bio.shortBio?.trim()) errs.shortBio = "Short bio is required";
-        setErrors(errs);
+          setErrorsWithAutoDismiss(errs , setErrors);
+        // setErrors(errs);
         return Object.keys(errs).length === 0;
       },
       services: () => {
@@ -137,7 +142,8 @@ export default function CompanionSignUpPage({ email , profile }) {
           errs.preferredAirports = "Select at least one Airport";
         if (!services.languages.length)
           errs.languages = "Select at least one Language";
-        setErrors(errs);
+          setErrorsWithAutoDismiss(errs , setErrors);
+        // setErrors(errs);
         return Object.keys(errs).length === 0;
       },
     };
@@ -231,7 +237,6 @@ export default function CompanionSignUpPage({ email , profile }) {
       //   throw new Error(saveResult.error);
       // }
 
-      // console.log(saveResult);
       // ! In your client component where you call saveCompanionData
       const {
         data: { session },
@@ -281,7 +286,7 @@ export default function CompanionSignUpPage({ email , profile }) {
             companionData: {
              id: saveResult.data.companionData.id,
               email: email,
-              fullName: formData.basics.fullName,
+              fullName: formData.basics.firstName + " " + formData.basics.lastName,
               phone: formattedPhone,
             },
           },

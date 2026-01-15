@@ -84,7 +84,7 @@ const TravellerSignup = ({ form, update, errors, emailFromProps, profile }) => {
           className="block text-slate-800 font-semibold mb-2"
         >
           {" "}
-          Gender{" "}
+          Gender <span className="text-rose-500">*</span>
         </label>{" "}
         <select
           id="gender"
@@ -107,7 +107,11 @@ const TravellerSignup = ({ form, update, errors, emailFromProps, profile }) => {
       <div className="grid md:grid-cols-2 gap-3">
         <MultiSelectField
           id="language"
-          label="Languages"
+          label={
+            <>
+              Languages <span className="text-rose-500">*</span>
+            </>
+          }
           options={[
             { value: "English", label: "English" },
             { value: "Spanish", label: "Spanish" },
@@ -122,7 +126,11 @@ const TravellerSignup = ({ form, update, errors, emailFromProps, profile }) => {
 
         <MultiSelectField
           id="specialNeeds"
-          label="Special Assistance"
+          label={
+            <>
+              Special Assistance <span className="text-rose-500">*</span>
+            </>
+          }
           options={[
             { value: "Wheelchair Access", label: "Mobility" },
             {

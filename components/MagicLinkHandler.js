@@ -16,6 +16,7 @@ function MagicLinkHandler() {
       if (session) {
         // ✅ Session ready, clean URL & reload
         const url = new URL(window.location.href);
+        // url.searchParams.delete("role");
         url.searchParams.delete("code");
         url.searchParams.delete("access_token");
         url.searchParams.delete("token_hash");
@@ -32,7 +33,7 @@ function MagicLinkHandler() {
     };
 
     checkSession();
-  }, []);
+  }, [supabase]);
 
   return (
     <div className="flex items-center justify-center h-screen">

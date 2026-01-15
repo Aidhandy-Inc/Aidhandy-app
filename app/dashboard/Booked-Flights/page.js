@@ -1,7 +1,4 @@
 "use client";
-
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 import { useState, useEffect } from "react";
 import { supabase } from "@/libs/supabaseClient";
 import LoadingState from "@/components/Profile/LoadingState";
@@ -14,35 +11,36 @@ import { useUser } from "@/context/ClientProvider";
 
 export default function BookedFlightsPage() {
   const [user, setUser] = useState(null);
-  const [mounted, setMounted] = useState(false);
   const [filters, setFilters] = useState({
     status: "all",
     date: "all",
   });
 
   useEffect(() => {
-    setMounted(true);
     const getUser = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
       setUser(session?.user || null);
     };
+
     getUser();
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
     });
+
     return () => subscription.unsubscribe();
   }, []);
-
-  const shouldFetch = mounted && !!user?.id;
-const queryResult = shouldFetch 
-  ? userBookedFlights(user?.id) 
-  : { data: null, isLoading: false, error: null, refetch: () => {}, isFetching: false };
-
-const { data: flights, isLoading, error, refetch, isFetching } = queryResult;
+  const {
+    data: flights,
+    isLoading,
+    error,
+    refetch,
+    isFetching,
+  } = userBookedFlights(user?.id);
 
   // Filter flights based on selected filters
   const filteredFlights = flights?.filter((flight) => {
@@ -52,14 +50,15 @@ const { data: flights, isLoading, error, refetch, isFetching } = queryResult;
     if (filters.date !== "all") {
       const flightDate = new Date(flight.departure_date);
       const today = new Date();
+
       if (filters.date === "upcoming" && flightDate < today) return false;
       if (filters.date === "past" && flightDate >= today) return false;
     }
     return true;
   });
 
-  if (!mounted) return <LoadingState />;
   if (isLoading) return <LoadingState />;
+
   if (error) {
     return (
       <ErrorState message="Failed to load booked flights" onRetry={refetch} />
@@ -77,6 +76,7 @@ const { data: flights, isLoading, error, refetch, isFetching } = queryResult;
             Manage and view all your flight bookings
           </p>
         </div>
+
         {/* Filters */}
         <FlightFilters
           filters={filters}
@@ -84,12 +84,14 @@ const { data: flights, isLoading, error, refetch, isFetching } = queryResult;
           flightCount={filteredFlights?.length || 0}
           totalCount={flights?.length || 0}
         />
+
         {/* Loading indicator for refetch */}
         {isFetching && !isLoading && (
           <div className="flex justify-center mb-4">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
           </div>
         )}
+
         {/* Flights List */}
         <div className="space-y-6">
           {filteredFlights?.length === 0 ? (

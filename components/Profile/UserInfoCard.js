@@ -1,15 +1,12 @@
 "use client";
 
-import { createBrowserClient } from "@supabase/ssr";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Card from "../common/Card";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function UserInfoCard({ profile }) {
-  const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+  const supabase = createClientComponentClient();
   const router = useRouter();
 
   useEffect(() => {
